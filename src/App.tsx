@@ -22,6 +22,11 @@ export const App = () => {
     return { id };
   };
 
+  console.log({
+    cart,
+    optimisticCart,
+  });
+
   return (
     <>
       <div>
@@ -52,9 +57,6 @@ const Cart = ({ cart }: { cart: Item[] }) => {
   if (cart.length == 0) {
     return null;
   }
-
-  console.log('Cart');
-  console.log(cart);
 
   return (
     <div>
