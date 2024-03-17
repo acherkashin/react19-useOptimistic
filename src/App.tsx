@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { useOptimistic } from 'react';
 // import { useOptimistic } from './useOptimistic';
-
+import './App.css';
 
 interface AddToCartFormProps {
   id: string;
   title: string;
-  addToCart: (formData: FormData, title: string) => Promise<{ id: string }>;
+  addToCart: (id: string, title: string) => Promise<{ id: string }>;
   optimisticAddToCart: (item: Item) => void;
 }
 
@@ -17,9 +17,11 @@ const AddToCartForm = ({ id, title, addToCart, optimisticAddToCart }: AddToCartF
     // If we remove async/await "useOptimistic" will stop working. At the same handmade useOptimistic function will work.
     // It seems during "async" operation we can update state only with "useOptimistic" hook, because useState hook doesn't work.
     // Does it work only inside "formAction" function?
+    console.log(formData)
+    const itemId = String(formData.get('itemID'));
     optimisticAddToCart({ id, title });
     try {
-      await addToCart(formData, title);
+      await addToCart(itemId, title);
     } catch (e) {
       console.log(e);
       // show error notification
@@ -49,15 +51,15 @@ const Cart = ({ cart }: { cart: Item[] }) => {
   console.log(cart);
 
   return (
-    <>
+    <div>
+      <hr />
       Cart content:
       <ul>
         {cart.map((item, index) => (
           <li key={index}>{item.title}</li>
         ))}
       </ul>
-      <hr />
-    </>
+    </div>
   );
 };
 
@@ -69,12 +71,9 @@ export const App = () => {
     (state, item) => [...state, item]
   );
 
-  console.log(`card == optimisticCard: ${cart == optimisticCart}`)
-
-  const addToCart = async (formData: FormData, title: string) => {
-    const id = String(formData.get('itemID'));
+  const addToCart = async (id: string, title: string) => {
     // simulate an AJAX call
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setCart((cart: Item[]) => [...cart, { id, title }]);
 
     return { id };
@@ -82,19 +81,21 @@ export const App = () => {
 
   return (
     <>
+      <div>
+        <AddToCartForm
+          id="1"
+          title="JavaScript: The Definitive Guide"
+          addToCart={addToCart}
+          optimisticAddToCart={optimisticAddToCart}
+        />
+        <AddToCartForm
+          id="2"
+          title="JavaScript: The Good Parts"
+          addToCart={addToCart}
+          optimisticAddToCart={optimisticAddToCart}
+        />
+      </div>
       <Cart cart={optimisticCart} />
-      <AddToCartForm
-        id="1"
-        title="JavaScript: The Definitive Guide"
-        addToCart={addToCart}
-        optimisticAddToCart={optimisticAddToCart}
-      />
-      <AddToCartForm
-        id="2"
-        title="JavaScript: The Good Parts"
-        addToCart={addToCart}
-        optimisticAddToCart={optimisticAddToCart}
-      />
     </>
   );
 };
