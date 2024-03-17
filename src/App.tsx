@@ -17,9 +17,8 @@ const AddToCartForm = ({ id, title, addToCart, optimisticAddToCart }: AddToCartF
     // If we remove async/await "useOptimistic" will stop working. At the same handmade useOptimistic function will work.
     // It seems during "async" operation we can update state only with "useOptimistic" hook, because useState hook doesn't work.
     // Does it work only inside "formAction" function?
-    console.log(formData)
     const itemId = String(formData.get('itemID'));
-    optimisticAddToCart({ id, title });
+    optimisticAddToCart({ id, title, pending: true });
     try {
       await addToCart(itemId, title);
     } catch (e) {
@@ -40,6 +39,7 @@ const AddToCartForm = ({ id, title, addToCart, optimisticAddToCart }: AddToCartF
 type Item = {
   id: string;
   title: string;
+  pending?: boolean;
 };
 
 const Cart = ({ cart }: { cart: Item[] }) => {
@@ -56,7 +56,7 @@ const Cart = ({ cart }: { cart: Item[] }) => {
       Cart content:
       <ul>
         {cart.map((item, index) => (
-          <li key={index}>{item.title}</li>
+          <li key={index} style={{ opacity: item.pending ? 0.5 : 1 }}>{item.title}</li>
         ))}
       </ul>
     </div>
