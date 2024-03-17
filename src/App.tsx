@@ -26,13 +26,11 @@ export const App = () => {
     <>
       <div>
         <AddToCartForm
-          id="1"
           title="JavaScript: The Definitive Guide"
           addToCart={addToCart}
           optimisticAddToCart={optimisticAddToCart}
         />
         <AddToCartForm
-          id="2"
           title="JavaScript: The Good Parts"
           addToCart={addToCart}
           optimisticAddToCart={optimisticAddToCart}
@@ -72,19 +70,18 @@ const Cart = ({ cart }: { cart: Item[] }) => {
 };
 
 interface AddToCartFormProps {
-  id: string;
   title: string;
   addToCart: (id: string, title: string) => Promise<{ id: string }>;
   optimisticAddToCart: (item: Item) => void;
 }
 
-const AddToCartForm = ({ id, title, addToCart, optimisticAddToCart }: AddToCartFormProps) => {
+const AddToCartForm = ({ title, addToCart, optimisticAddToCart }: AddToCartFormProps) => {
   const formAction = async (formData: FormData) => {
     // If we remove async/await "useOptimistic" will stop working. At the same handmade useOptimistic function will work.
     // It seems during "async" operation we can update state only with "useOptimistic" hook, because useState hook doesn't work.
     // Does it work only inside "formAction" function?
     const itemId = String(formData.get('itemID'));
-    optimisticAddToCart({ id, title, pending: true });
+    optimisticAddToCart({ id: itemId, title, pending: true });
     try {
       await addToCart(itemId, title);
     } catch (e) {
@@ -96,7 +93,7 @@ const AddToCartForm = ({ id, title, addToCart, optimisticAddToCart }: AddToCartF
   return (
     <form action={formAction}>
       <h2>{title}</h2>
-      <input type="hidden" name="itemID" value={id} />
+      <input type="hidden" name="itemID" value={crypto.randomUUID()} />
       <button type="submit">Add to Cart</button>
     </form>
   );
