@@ -6,12 +6,21 @@ import { useOptimistic } from 'react';
 import './App.css';
 
 
+type OptimisticActionProps = { action: 'add' | 'remove', item: Item }
+
 export const App = () => {
   const [cart, setCart] = useState<Item[]>([]);
 
-  const [optimisticCart, optimisticAddToCart] = useOptimistic<Item[], Item>(
+  const [optimisticCart, optimisticCartUpdate] = useOptimistic<Item[], OptimisticActionProps>(
     cart,
-    (state, item) => [...state, item]
+    (state, { action, item }) => {
+      switch (action) {
+        case 'add': return [...state, item];
+        case 'remove': return state.filter(item => item.id !== item.id);
+      }
+
+      return state;
+    }
   );
 
   const addToCart = async (id: string, title: string) => {
@@ -33,12 +42,12 @@ export const App = () => {
         <AddToCartForm
           title="JavaScript: The Definitive Guide"
           addToCart={addToCart}
-          optimisticAddToCart={optimisticAddToCart}
+          optimisticUpdate={optimisticCartUpdate}
         />
         <AddToCartForm
           title="JavaScript: The Good Parts"
           addToCart={addToCart}
-          optimisticAddToCart={optimisticAddToCart}
+          optimisticUpdate={optimisticCartUpdate}
         />
       </div>
       <Cart cart={optimisticCart} />
@@ -74,21 +83,19 @@ const Cart = ({ cart }: { cart: Item[] }) => {
 interface AddToCartFormProps {
   title: string;
   addToCart: (id: string, title: string) => Promise<{ id: string }>;
-  optimisticAddToCart: (item: Item) => void;
+  optimisticUpdate: (props: OptimisticActionProps) => void;
 }
 
-const AddToCartForm = ({ title, addToCart, optimisticAddToCart }: AddToCartFormProps) => {
-  const formAction = async (formData: FormData) => {
-    // If we remove async/await "useOptimistic" will stop working. At the same handmade useOptimistic function will work.
-    // It seems during "async" operation we can update state only with "useOptimistic" hook, because useState hook doesn't work.
-    // Does it work only inside "formAction" function?
-    const itemId = String(formData.get('itemID'));
-    optimisticAddToCart({ id: itemId, title, pending: true });
+const AddToCartForm = ({ title, addToCart, optimisticUpdate: optimisticAddToCart }: AddToCartFormProps) => {
+  const formAction = async () => {
+    const item: Item = { id: crypto.randomUUID(), title, pending: true };
+
+    optimisticAddToCart({ action: 'add', item });
     try {
-      await addToCart(itemId, title);
+      await addToCart(item.id, item.title);
     } catch (e) {
-      console.log(e);
-      // show error notification
+      console.log(e); // show error popup
+      optimisticAddToCart({ action: 'add', item });
     }
   };
 
@@ -99,4 +106,4 @@ const AddToCartForm = ({ title, addToCart, optimisticAddToCart }: AddToCartFormP
       <button type="submit">Add to Cart</button>
     </form>
   );
-};
+}
